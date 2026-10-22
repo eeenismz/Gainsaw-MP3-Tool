@@ -14,4 +14,5 @@ Linear: Gainsaw-MP3-Tool (https://linear.app/estains/project/gainsaw-mp3-tool-4e
 ## In Progress
 
 ## Pending
+- LAME tag "music length" and "music CRC" are left at the original values after trim/gain (same as v1 and MP3Gain); update or zero them? (tech-reviewer warning)
 - Decide whether to drop the Claude-viewer .zip save path (`src/js/zip.js`); proposed drop, waiting on owner

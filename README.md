@@ -4,7 +4,7 @@ Lossless MP3 trimming and volume changes, done in the browser. Your file never l
 
 ## Use
 
-Open `dist/gainsaw.html` (one self-contained file) or `src/index.html` in Chrome. Both work from `file://`, so there is nothing to install or run.
+Open `dist/gainsaw.html` (one self-contained file) or `src/index.html` in Chrome. Both work from `file://`, so there is nothing to install or run. Fonts load from Google Fonts; offline, the page falls back to system fonts.
 
 - **Open MP3 / drop a file:** loads an MPEG Layer III (MP3) file. Other formats are not supported.
 - **Waveform:** drag the blue handles to trim the start and end. Click the waveform to move the playhead.

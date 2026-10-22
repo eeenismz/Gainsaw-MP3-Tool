@@ -18,3 +18,5 @@
 - 2026-10-22 Front cuts can glitch for ~26 ms because the first kept frame may reference bit-reservoir data from a removed frame; a fade-in hides it. Accepted. (from SPEC §4.7)
 - 2026-10-22 Recent ffprobe/ffmpeg honour the LAME tag's delay/padding when reporting duration, so a stale tag shows up as a short file in tests.
 - 2026-10-22 ffmpeg `anoisesrc` defaults to 48 kHz; the pink fixture is 48 kHz and uses `seed=1` for reproducibility.
+- 2026-10-22 The LAME tag's music length (q+28) and music CRC (q+32) are not updated on save; only delay/padding and the tag CRC are. Playback is fine, strict validators may complain.
+- 2026-10-22 The Claude-in-Chrome extension cannot open file:// pages; use headless Chrome (`--headless=new --dump-dom`, `--allow-file-access-from-files`) for file:// checks.
