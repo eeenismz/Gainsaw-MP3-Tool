@@ -82,7 +82,12 @@ function buildMp3(P,s,e,deltaFn){
     if(flags&2){w32(out,q,total);q+=4}
     if(flags&4){for(let i=0;i<100;i++){const fi=Math.min(n-1,Math.floor(i*n/100));out[q+i]=Math.min(255,Math.floor(offs[fi]/total*256))}q+=100}
     if(flags&8)q+=4;
-    if(q+36<=xs+xlen&&/^[A-Za-z]{4}$/.test(str(out,q,4))){const c=crc16arc(out,xs,q-xs+34);out[q+34]=c>>8;out[q+35]=c&255}
+    if(q+36<=xs+xlen&&/^[A-Za-z]{4}$/.test(str(out,q,4))){
+      // gapless: 24-bit field at q+21 = delay (high 12 bits) | padding (low 12 bits); zero the side that was trimmed
+      let gv=(out[q+21]<<16)|(out[q+22]<<8)|out[q+23],dl=gv>>>12,pd=gv&4095;
+      if(s>0)dl=0;if(e<A.length)pd=0;
+      out[q+21]=(dl>>4)&255;out[q+22]=(((dl&15)<<4)|(pd>>8))&255;out[q+23]=pd&255;
+      const c=crc16arc(out,xs,q-xs+34);out[q+34]=c>>8;out[q+35]=c&255}
   }
   return {bytes:out,clampHi:hi,clampLo:lo};
 }

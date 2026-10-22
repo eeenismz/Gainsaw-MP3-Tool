@@ -8,9 +8,13 @@
 - 2026-10-22 Loudness target in LUFS, not ReplayGain 89 dB; the "MP3Gain classic" chip approximates 89 dB as -18 LUFS. (from SPEC §11)
 - 2026-10-22 Classic `<script src>` tags, no ES modules, because the app must run from `file://`. (from SPEC §11)
 - 2026-10-22 One file at a time, desktop Chrome first: the owner's stated use case. (from SPEC §11)
+- 2026-10-22 On trim, `buildMp3` zeroes the LAME tag's encoder delay if the front was cut and end padding if the end was cut (then recomputes the tag CRC). Leaving them stale made ffprobe/players drop 24–72 ms of real audio, more than SPEC §4.7 estimated.
+- 2026-10-22 K-weighting uses the libebur128 bilinear (tan) form, not the RBJ cookbook shelf; RBJ with the same G/Q/fc read ~0.26 LU low.
 
 ## Rejected Approaches
+- 2026-10-22 Widening the AC3 duration tolerance to hide the trim shortfall: the shortfall was exactly the stale LAME delay+padding, so it was fixed in code instead.
 
 ## Gotchas
 - 2026-10-22 Front cuts can glitch for ~26 ms because the first kept frame may reference bit-reservoir data from a removed frame; a fade-in hides it. Accepted. (from SPEC §4.7)
-- 2026-10-22 LAME encoder delay/padding is not updated after a trim (~25 ms effect). Accepted for now. (from SPEC §4.7)
+- 2026-10-22 Recent ffprobe/ffmpeg honour the LAME tag's delay/padding when reporting duration, so a stale tag shows up as a short file in tests.
+- 2026-10-22 ffmpeg `anoisesrc` defaults to 48 kHz; the pink fixture is 48 kHz and uses `seed=1` for reproducibility.

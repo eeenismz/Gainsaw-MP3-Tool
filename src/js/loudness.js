@@ -1,11 +1,13 @@
 (function (root) {
 function kCoefs(fs){
+  // libebur128 bilinear form (K=tan(pi*fc/fs)); reproduces BS.1770 48k coefficients exactly
   let G=3.999843853973347,Q=0.7071752369554196,fc=1681.974450955533;
-  let A=Math.pow(10,G/40),w=2*Math.PI*fc/fs,cs=Math.cos(w),al=Math.sin(w)/(2*Q),sA=Math.sqrt(A);
-  let a0=(A+1)-(A-1)*cs+2*sA*al;
-  const f1={b0:A*((A+1)+(A-1)*cs+2*sA*al)/a0,b1:-2*A*((A-1)+(A+1)*cs)/a0,b2:A*((A+1)+(A-1)*cs-2*sA*al)/a0,a1:2*((A-1)-(A+1)*cs)/a0,a2:((A+1)-(A-1)*cs-2*sA*al)/a0};
-  Q=0.5003270373238773;fc=38.13547087602444;w=2*Math.PI*fc/fs;cs=Math.cos(w);al=Math.sin(w)/(2*Q);a0=1+al;
-  const f2={b0:(1+cs)/2/a0,b1:-(1+cs)/a0,b2:(1+cs)/2/a0,a1:-2*cs/a0,a2:(1-al)/a0};
+  let K=Math.tan(Math.PI*fc/fs),Vh=Math.pow(10,G/20),Vb=Math.pow(Vh,0.4996667741545416),a0=1+K/Q+K*K;
+  // stage 1: high shelf
+  const f1={b0:(Vh+Vb*K/Q+K*K)/a0,b1:2*(K*K-Vh)/a0,b2:(Vh-Vb*K/Q+K*K)/a0,a1:2*(K*K-1)/a0,a2:(1-K/Q+K*K)/a0};
+  Q=0.5003270373238773;fc=38.13547087602444;K=Math.tan(Math.PI*fc/fs);a0=1+K/Q+K*K;
+  // stage 2: high-pass
+  const f2={b0:1,b1:-2,b2:1,a1:2*(K*K-1)/a0,a2:(1-K/Q+K*K)/a0};
   return [f1,f2];
 }
 function hopEnergies(chans,fs){
