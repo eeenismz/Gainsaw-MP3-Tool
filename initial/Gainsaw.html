@@ -1,0 +1,559 @@
+<title>Gainsaw</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@600;800&display=swap">
+<style>
+/* Layout: one console column. Waveform deck on top, Trim + Volume cards side by side, export bar at the foot. */
+:root{
+  --bg:#E4E8EE; --panel:#F5F7FA; --panel-2:#ECEFF4; --ink:#151A23; --muted:#5A6373; --line:#C8CED8;
+  --accent:#2347DF; --accent-ink:#FFFFFF; --wave:#273246; --wave-dim:#AEB6C3; --sel:rgba(35,71,223,.07);
+  --clip:#D2263C; --ok:#17855A; --warn:#A86D12;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1218; --panel:#161B24; --panel-2:#1C2230; --ink:#E6EBF2; --muted:#8C96A8; --line:#2A3241;
+  --accent:#7590FF; --accent-ink:#0A0E15; --wave:#C9D3E4; --wave-dim:#384152; --sel:rgba(117,144,255,.08);
+  --clip:#FF5C70; --ok:#3CC98B; --warn:#E5AA4C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1218; --panel:#161B24; --panel-2:#1C2230; --ink:#E6EBF2; --muted:#8C96A8; --line:#2A3241;
+  --accent:#7590FF; --accent-ink:#0A0E15; --wave:#C9D3E4; --wave-dim:#384152; --sel:rgba(117,144,255,.08);
+  --clip:#FF5C70; --ok:#3CC98B; --warn:#E5AA4C; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.app{max-width:1080px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,5vw,40px);letter-spacing:-.02em;margin:0;line-height:1}
+.brand h1 span{color:var(--accent)}
+.brand p{margin:0;color:var(--muted);font-size:14px}
+.fileinfo{font-family:var(--f-mono);font-size:12px;color:var(--muted);text-align:right;min-width:0;overflow-wrap:anywhere}
+.fileinfo b{color:var(--ink);font-weight:600;font-family:var(--f-body);font-size:14px;display:block}
+.btn{font:600 14px/1 var(--f-body);border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:10px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.small{padding:6px 9px;font-size:13px;font-family:var(--f-mono);font-weight:400}
+.btn:focus-visible,.chip:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.deck{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.wavewrap{position:relative;height:240px}
+canvas#wave{display:block;width:100%;height:100%;touch-action:none}
+.drop{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:10px;text-align:center;padding:20px;background:var(--panel)}
+.drop.over{background:var(--panel-2);outline:2px dashed var(--accent);outline-offset:-10px}
+.drop h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0}
+.drop p{margin:0;color:var(--muted);max-width:44ch}
+.ghost{width:min(560px,80vw);height:46px;opacity:.5}
+.transport{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--panel-2)}
+.clock{margin-left:auto;font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.clock b{color:var(--ink);font-weight:600}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:780px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:14px;align-content:start;min-width:0}
+.card h3{margin:0;font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h3 small{font-family:var(--f-mono);letter-spacing:0;text-transform:none;font-weight:400;color:var(--muted);font-size:12px}
+.off{opacity:.45;pointer-events:none}
+.row{display:grid;grid-template-columns:72px auto 1fr auto;align-items:center;gap:8px}
+.lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tval{font-family:var(--f-mono);font-size:18px;font-variant-numeric:tabular-nums;text-align:center}
+.split{display:flex;flex-wrap:wrap;gap:8px}
+.meta{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.slider{display:grid;grid-template-columns:72px 1fr 56px;align-items:center;gap:10px}
+.slider output{font-family:var(--f-mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.gainhead{display:flex;align-items:center;gap:12px}
+.gainval{font-family:var(--f-mono);font-weight:600;font-size:40px;line-height:1;font-variant-numeric:tabular-nums;min-width:5.2ch}
+.gainhead .meta{line-height:1.4}
+.gainrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.stats{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;font-variant-numeric:tabular-nums;border-top:1px solid var(--line);padding-top:12px}
+.stats .v{font-family:var(--f-mono);font-size:14px}
+.stats .v i{font-style:normal;color:var(--muted)}
+.pill{font:600 11px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:99px;border:1px solid currentColor;justify-self:end}
+.pill.ok{color:var(--ok)} .pill.bad{color:var(--clip)} .pill.mid{color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 13px/1 var(--f-body);padding:8px 10px;border-radius:99px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip .n{font-family:var(--f-mono);color:var(--muted);margin-left:4px}
+.note{font-size:13px;color:var(--muted);margin:0}
+.export{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.export input[type=text]{flex:1 1 240px;min-width:0;font:400 14px var(--f-mono);padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink)}
+.status{flex-basis:100%;margin:0;font-size:13px;color:var(--muted);min-height:1.5em}
+.status.err{color:var(--clip)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding-top:4px}
+@media (max-width:780px){.facts{grid-template-columns:1fr}}
+.facts div{border-top:2px solid var(--ink);padding-top:10px}
+.facts h4{margin:0 0 4px;font-size:14px}
+.facts p{margin:0;font-size:13px;color:var(--muted);max-width:40ch}
+.kbd{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1>Gain<span>saw</span></h1>
+      <p>Lossless MP3 trimming and volume, right in your browser.</p>
+    </div>
+    <div class="fileinfo" id="fileinfo"><b>No file loaded</b>MPEG Layer III only</div>
+  </header>
+
+  <section class="deck" aria-label="Waveform">
+    <div class="wavewrap" id="wavewrap">
+      <canvas id="wave" aria-label="Waveform. Drag the blue handles to trim the start and end."></canvas>
+      <div class="drop" id="drop">
+        <svg class="ghost" viewBox="0 0 560 46" aria-hidden="true"><g fill="var(--wave-dim)" id="ghostbars"></g></svg>
+        <h2>Drop an MP3 here</h2>
+        <p>Trim the front or back and set the volume. Your file stays on this computer and is never re-encoded.</p>
+        <label class="btn primary" for="file">Open MP3</label>
+      </div>
+      <input type="file" id="file" accept=".mp3,audio/mpeg" hidden>
+    </div>
+    <div class="transport">
+      <button class="btn" id="play" disabled>Play</button>
+      <button class="btn" id="hearStart" disabled>Hear start</button>
+      <button class="btn" id="hearEnd" disabled>Hear end</button>
+      <label class="btn" for="file" id="openAgain" hidden>Open another</label>
+      <div class="clock"><b id="clockNow">0:00.000</b> / <span id="clockLen">0:00.000</span> <span class="kbd">Space</span></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card off" id="trimCard" aria-label="Trim">
+      <h3>Trim <small id="frameNote">cuts snap to MP3 frames</small></h3>
+      <div class="row">
+        <span class="lbl">Start</span>
+        <button class="btn small" data-nudge="a,-1" aria-label="Start one frame earlier">−1f</button>
+        <span class="tval" id="tStart">0:00.000</span>
+        <button class="btn small" data-nudge="a,1" aria-label="Start one frame later">+1f</button>
+      </div>
+      <div class="row">
+        <span class="lbl">End</span>
+        <button class="btn small" data-nudge="b,-1" aria-label="End one frame earlier">−1f</button>
+        <span class="tval" id="tEnd">0:00.000</span>
+        <button class="btn small" data-nudge="b,1" aria-label="End one frame later">+1f</button>
+      </div>
+      <div class="split">
+        <button class="btn" id="autoTrim">Trim silence</button>
+        <button class="btn" id="resetTrim">Reset trim</button>
+        <span class="meta" id="tLen" style="align-self:center">Length 0:00.000</span>
+      </div>
+      <div class="slider">
+        <label class="lbl" for="fadeIn">Fade in</label>
+        <input type="range" id="fadeIn" min="0" max="10" step="0.5" value="0">
+        <output id="fadeInV">off</output>
+      </div>
+      <div class="slider">
+        <label class="lbl" for="fadeOut">Fade out</label>
+        <input type="range" id="fadeOut" min="0" max="10" step="0.5" value="0">
+        <output id="fadeOutV">off</output>
+      </div>
+      <p class="note">Fades are lossless too. Gainsaw steps each frame's gain down in 1.5 dB increments instead of re-encoding.</p>
+    </section>
+
+    <section class="card off" id="gainCard" aria-label="Volume">
+      <h3>Volume <small>1 step = 1.5 dB</small></h3>
+      <div class="gainhead">
+        <div class="gainval" id="gainVal">0.0</div>
+        <div class="meta">dB<br><span id="gainSteps">0 steps</span></div>
+      </div>
+      <div class="gainrow">
+        <button class="btn small" id="gMinus" aria-label="One step quieter">−</button>
+        <input type="range" id="gain" min="-16" max="16" step="1" value="0" aria-label="Gain in 1.5 dB steps">
+        <button class="btn small" id="gPlus" aria-label="One step louder">+</button>
+      </div>
+      <div class="stats">
+        <span class="lbl">Loudness</span><span class="v" id="sLufs">—</span><span></span>
+        <span class="lbl">Peak</span><span class="v" id="sPeak">—</span><span class="pill ok" id="clipPill">Clean</span>
+      </div>
+      <div class="chips" role="group" aria-label="Loudness targets">
+        <button class="chip" data-target="-14">Streaming<span class="n">−14</span></button>
+        <button class="chip" data-target="-16">Apple Music<span class="n">−16</span></button>
+        <button class="chip" data-target="-18">MP3Gain classic<span class="n">−18</span></button>
+        <button class="chip" id="maxClean">Loudest without clipping</button>
+      </div>
+      <p class="note">Targets are in LUFS, measured on the part you keep. Gain changes are reversible: the opposite number of steps restores the original.</p>
+    </section>
+  </div>
+
+  <section class="export" aria-label="Save">
+    <input type="text" id="fname" value="" placeholder="file name.mp3" aria-label="File name" disabled>
+    <button class="btn primary" id="save" disabled>Save MP3</button>
+    <p class="status" id="status" role="status">Open an MP3 to start.</p>
+  </section>
+
+  <div class="facts">
+    <div><h4>Cuts on frame edges</h4><p>An MP3 is a chain of frames about 26 ms long. Gainsaw removes whole frames, so the audio you keep is untouched.</p></div>
+    <div><h4>Volume without decoding</h4><p>Like MP3Gain, it edits the global gain value stored in every frame. Each step changes loudness by exactly 1.5 dB.</p></div>
+    <div><h4>Tags stay put</h4><p>Title, artist and cover art (ID3) are copied across, and the VBR seek table is rebuilt for the new length.</p></div>
+  </div>
+</div>
+
+<script id="core">
+/* ---------- MP3 frame core (no DOM) ---------- */
+const BR1=[0,32,40,48,56,64,80,96,112,128,160,192,224,256,320];
+const BR2=[0,8,16,24,32,40,48,56,64,80,96,112,128,144,160];
+const SRT={3:[44100,48000,32000],2:[22050,24000,16000],0:[11025,12000,8000]};
+function hdr(u,i){
+  if(i+4>u.length||u[i]!==0xFF||(u[i+1]&0xE0)!==0xE0)return null;
+  const ver=(u[i+1]>>3)&3,layer=(u[i+1]>>1)&3;
+  if(ver===1||layer!==1)return null;
+  const bi=u[i+2]>>4,si=(u[i+2]>>2)&3;
+  if(bi===0||bi===15||si===3)return null;
+  const m1=ver===3,br=(m1?BR1:BR2)[bi]*1000,sr=SRT[ver][si],pad=(u[i+2]>>1)&1,mode=u[i+3]>>6;
+  return {ver,m1,sr,br,mode,nch:mode===3?1:2,crc:(u[i+1]&1)===0,spf:m1?1152:576,len:Math.floor((m1?144:72)*br/sr)+pad};
+}
+function sideLen(h){return h.m1?(h.nch===1?17:32):(h.nch===1?9:17)}
+const GGC={};
+function ggOffs(h){
+  const k=(h.m1?1:2)+'-'+h.nch;if(GGC[k])return GGC[k];const o=[];
+  if(h.m1){const st=9+(h.nch===1?5:3)+4*h.nch;for(let g=0;g<2;g++)for(let c=0;c<h.nch;c++)o.push(st+(g*h.nch+c)*59+21)}
+  else{const st=8+(h.nch===1?1:2);for(let c=0;c<h.nch;c++)o.push(st+c*63+21)}
+  return GGC[k]=o;
+}
+function readBits(u,base,off,n){let v=0;for(let i=0;i<n;i++){const b=off+i;v=(v<<1)|((u[base+(b>>3)]>>(7-(b&7)))&1)}return v}
+function writeBits(u,base,off,n,val){for(let i=0;i<n;i++){const b=off+i,idx=base+(b>>3),sh=7-(b&7),bit=(val>>(n-1-i))&1;u[idx]=(u[idx]&~(1<<sh))|(bit<<sh)}}
+function crcMpeg(u,p,sl){let crc=0xFFFF;const feed=x=>{for(let i=7;i>=0;i--){const top=(crc>>15)&1;crc=(crc<<1)&0xFFFF;if(top^((x>>i)&1))crc^=0x8005}};feed(u[p+2]);feed(u[p+3]);for(let i=0;i<sl;i++)feed(u[p+6+i]);return crc}
+function crc16arc(u,s,n){let c=0;for(let i=0;i<n;i++){c^=u[s+i];for(let k=0;k<8;k++)c=(c&1)?(c>>>1)^0xA001:c>>>1}return c}
+function str(u,i,n){let s='';for(let k=0;k<n&&i+k<u.length;k++)s+=String.fromCharCode(u[i+k]);return s}
+function isTagAt(u,i){return str(u,i,3)==='TAG'||str(u,i,8)==='APETAGEX'||str(u,i,6)==='LYRICS'}
+function u32(u,i){return ((u[i]<<24)|(u[i+1]<<16)|(u[i+2]<<8)|u[i+3])>>>0}
+function w32(u,i,v){u[i]=v>>>24&255;u[i+1]=v>>>16&255;u[i+2]=v>>>8&255;u[i+3]=v&255}
+
+function parseMp3(u){
+  let pos=0;
+  while(pos+10<=u.length&&str(u,pos,3)==='ID3'){
+    const size=((u[pos+6]&127)<<21)|((u[pos+7]&127)<<14)|((u[pos+8]&127)<<7)|(u[pos+9]&127);
+    pos+=10+size+((u[pos+5]&16)?10:0);
+  }
+  const head=u.subarray(0,Math.min(pos,u.length));
+  let first=null,i=pos;
+  for(;i+4<u.length;i++){const h=hdr(u,i);if(!h)continue;const h2=hdr(u,i+h.len);if(h2&&h2.ver===h.ver&&h2.sr===h.sr){first=h;break}}
+  if(!first)throw new Error('No MP3 audio frames found. Is this an MPEG Layer III file?');
+  const frames=[];let off=i;
+  const same=h=>h&&h.ver===first.ver&&h.sr===first.sr;
+  while(off+4<=u.length){
+    const h=hdr(u,off);
+    if(same(h)&&off+h.len<=u.length){frames.push({off,len:h.len,h});off+=h.len;continue}
+    if(isTagAt(u,off))break;
+    let found=-1;
+    for(let j=off+1;j+4<u.length;j++){if(isTagAt(u,j))break;const a=hdr(u,j);if(same(a)){const n=j+a.len;if(n===u.length||same(hdr(u,n))||isTagAt(u,n)){found=j;break}}}
+    if(found<0)break;off=found;
+  }
+  const tail=u.subarray(off);
+  let xing=null,vbri=false;
+  const f0=frames[0],h0=f0.h,xo=4+(h0.crc?2:0)+sideLen(h0),tag=str(u,f0.off+xo,4);
+  if(tag==='Xing'||tag==='Info')xing={frame:f0,xo,vbr:tag==='Xing'};
+  else if(str(u,f0.off+36,4)==='VBRI')vbri=true;
+  const audio=(xing||vbri)?frames.slice(1):frames;
+  return {u,head,tail,xing,vbri,audio,first};
+}
+
+/* deltaFn(k) -> gain steps for audio frame k (absolute index). Returns {bytes, clampHi, clampLo} */
+function buildMp3(P,s,e,deltaFn){
+  const u=P.u,A=P.audio,x=P.xing,xlen=x?x.frame.len:0;
+  let ab=0;for(let k=s;k<e;k++)ab+=A[k].len;
+  const out=new Uint8Array(P.head.length+xlen+ab+P.tail.length);
+  let p=0,hi=0,lo=0;out.set(P.head,p);p+=P.head.length;
+  const xs=p;if(x){out.set(u.subarray(x.frame.off,x.frame.off+xlen),p);p+=xlen}
+  const offs=new Array(e-s);
+  for(let k=s;k<e;k++){
+    const f=A[k];out.set(u.subarray(f.off,f.off+f.len),p);offs[k-s]=p-xs;
+    const d=deltaFn(k);
+    if(d!==0){
+      const base=p+4+(f.h.crc?2:0);
+      for(const o of ggOffs(f.h)){let v=readBits(out,base,o,8)+d;if(v>255){v=255;hi++}else if(v<0){v=0;lo++}writeBits(out,base,o,8,v)}
+      if(f.h.crc){const c=crcMpeg(out,p,sideLen(f.h));out[p+4]=c>>8;out[p+5]=c&255}
+    }
+    p+=f.len;
+  }
+  out.set(P.tail,p);
+  if(x&&!(s===0&&e===A.length)){
+    const n=e-s,total=xlen+ab;let q=xs+x.xo+4;const flags=u32(out,q);q+=4;
+    if(flags&1){w32(out,q,n);q+=4}
+    if(flags&2){w32(out,q,total);q+=4}
+    if(flags&4){for(let i=0;i<100;i++){const fi=Math.min(n-1,Math.floor(i*n/100));out[q+i]=Math.min(255,Math.floor(offs[fi]/total*256))}q+=100}
+    if(flags&8)q+=4;
+    if(q+36<=xs+xlen&&/^[A-Za-z]{4}$/.test(str(out,q,4))){const c=crc16arc(out,xs,q-xs+34);out[q+34]=c>>8;out[q+35]=c&255}
+  }
+  return {bytes:out,clampHi:hi,clampLo:lo};
+}
+
+/* ---------- loudness (ITU-R BS.1770, K-weighted, gated) ---------- */
+function kCoefs(fs){
+  let G=3.999843853973347,Q=0.7071752369554196,fc=1681.974450955533;
+  let A=Math.pow(10,G/40),w=2*Math.PI*fc/fs,cs=Math.cos(w),al=Math.sin(w)/(2*Q),sA=Math.sqrt(A);
+  let a0=(A+1)-(A-1)*cs+2*sA*al;
+  const f1={b0:A*((A+1)+(A-1)*cs+2*sA*al)/a0,b1:-2*A*((A-1)+(A+1)*cs)/a0,b2:A*((A+1)+(A-1)*cs-2*sA*al)/a0,a1:2*((A-1)-(A+1)*cs)/a0,a2:((A+1)-(A-1)*cs-2*sA*al)/a0};
+  Q=0.5003270373238773;fc=38.13547087602444;w=2*Math.PI*fc/fs;cs=Math.cos(w);al=Math.sin(w)/(2*Q);a0=1+al;
+  const f2={b0:(1+cs)/2/a0,b1:-(1+cs)/a0,b2:(1+cs)/2/a0,a1:-2*cs/a0,a2:(1-al)/a0};
+  return [f1,f2];
+}
+function hopEnergies(chans,fs){
+  const [f1,f2]=kCoefs(fs),hop=Math.round(fs*0.1),L=chans[0].length,nh=Math.floor(L/hop),E=new Float64Array(nh);
+  for(const x of chans){
+    let xp1=0,xp2=0,yp1=0,yp2=0,zp1=0,zp2=0,hi=0,cnt=0;
+    for(let i=0;i<nh*hop;i++){
+      const xi=x[i],yi=f1.b0*xi+f1.b1*xp1+f1.b2*xp2-f1.a1*yp1-f1.a2*yp2;xp2=xp1;xp1=xi;
+      const zi=f2.b0*yi+f2.b1*yp1+f2.b2*yp2-f2.a1*zp1-f2.a2*zp2;yp2=yp1;yp1=yi;zp2=zp1;zp1=zi;
+      E[hi]+=zi*zi;if(++cnt===hop){cnt=0;hi++}
+    }
+  }
+  return {E,hop};
+}
+function gatedLoudness(E,hop,t0,t1){
+  const z=[];for(let j=Math.ceil(t0/0.1-1e-9);j+3<E.length&&j*0.1+0.4<=t1+1e-9;j++)z.push((E[j]+E[j+1]+E[j+2]+E[j+3])/(4*hop));
+  const lk=v=>-0.691+10*Math.log10(v);
+  const g1=z.filter(v=>v>0&&lk(v)>-70);if(!g1.length)return null;
+  const rel=lk(g1.reduce((a,b)=>a+b,0)/g1.length)-10;
+  const g2=g1.filter(v=>lk(v)>rel);if(!g2.length)return null;
+  return lk(g2.reduce((a,b)=>a+b,0)/g2.length);
+}
+</script>
+
+<script>
+/* ---------- app ---------- */
+const $=s=>document.querySelector(s);
+const S={P:null,name:'',N:0,fd:0,sel0:0,sel1:0,steps:0,fadeIn:0,fadeOut:0,buf:null,ctx:null,an:null,ph:0,playing:null};
+const MODES=['Stereo','Joint stereo','Dual channel','Mono'];
+
+function fmt(t){t=Math.max(0,t);const m=Math.floor(t/60),s=t-m*60;return m+':'+s.toFixed(3).padStart(6,'0')}
+function sdb(v,d=1){if(v==null||!isFinite(v))return '—';const r=v.toFixed(d);return (v>0.0001?'+':v<-0.0001?'−':'')+r.replace('-','')}
+function status(msg,err){const el=$('#status');el.textContent=msg;el.classList.toggle('err',!!err)}
+
+/* ghost waveform for empty state */
+(()=>{let g='';for(let i=0;i<112;i++){const h=6+Math.abs(Math.sin(i*0.37)*Math.cos(i*0.11))*34;g+=`<rect x="${i*5}" y="${(46-h)/2}" width="3" height="${h}" rx="1.5"/>`}$('#ghostbars').innerHTML=g})();
+
+/* ---------- loading ---------- */
+const fileIn=$('#file'),drop=$('#drop'),wrap=$('#wavewrap');
+fileIn.addEventListener('change',()=>{if(fileIn.files[0])load(fileIn.files[0]);fileIn.value=''});
+['dragenter','dragover'].forEach(ev=>wrap.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>wrap.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
+wrap.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)load(f)});
+
+async function load(file){
+  stop();status('Reading '+file.name+'…');
+  let P;
+  try{const u=new Uint8Array(await file.arrayBuffer());P=parseMp3(u)}catch(err){status(err.message||'This file could not be read.',true);return}
+  if(P.audio.length<10){status('This MP3 is too short to edit.',true);return}
+  const h=P.first;
+  S.P=P;S.name=file.name;S.N=P.audio.length;S.fd=h.spf/h.sr;S.sel0=0;S.sel1=S.N;S.ph=0;S.an=null;S.buf=null;
+  S.steps=0;S.fadeIn=0;S.fadeOut=0;$('#gain').value=0;$('#fadeIn').value=0;$('#fadeOut').value=0;
+  const dur=S.N*S.fd,bytes=P.audio.reduce((a,f)=>a+f.len,0),kbps=Math.round(bytes*8/dur/1000);
+  const vbr=P.audio.some(f=>f.h.br!==P.audio[0].h.br);
+  $('#fileinfo').innerHTML='';const b=document.createElement('b');b.textContent=file.name;$('#fileinfo').append(b,
+    document.createTextNode(`MPEG-${h.m1?'1':h.ver===2?'2':'2.5'} Layer III · ${(h.sr/1000).toFixed(1)} kHz · ${MODES[h.mode]} · ${vbr?'VBR ~':''}${kbps} kbps · ${fmt(dur)}`));
+  $('#frameNote').textContent=`cuts snap to ${(S.fd*1000).toFixed(1)} ms frames`;
+  $('#fname').value=file.name.replace(/\.mp3$/i,'')+'-edit.mp3';
+  drop.hidden=true;$('#openAgain').hidden=false;
+  ['#trimCard','#gainCard'].forEach(s=>$(s).classList.remove('off'));
+  ['#play','#hearStart','#hearEnd','#save','#fname'].forEach(s=>$(s).disabled=false);
+  refresh();
+  status('Measuring loudness…');
+  try{
+    if(!S.ctx)S.ctx=new (window.AudioContext||window.webkitAudioContext)();
+    S.buf=await S.ctx.decodeAudioData(P.u.buffer.slice(P.u.byteOffset,P.u.byteOffset+P.u.byteLength));
+    if(S.P!==P)return;
+    S.an=analyze(S.buf);refresh();
+    status(P.vbri?'Ready. This file has a VBRI header, which Gainsaw drops on save (playback is unaffected).':'Ready. Drag the blue handles to trim, then set the volume.');
+  }catch(err){status('Edits still work, but this browser could not decode the audio for preview and loudness.',true);refresh()}
+}
+
+function analyze(buf){
+  const nc=Math.min(2,buf.numberOfChannels),ch=[];for(let c=0;c<nc;c++)ch.push(buf.getChannelData(c));
+  const fs=buf.sampleRate,L=buf.length,h=S.P.first,ratio=fs/h.sr;
+  const fPeak=new Float32Array(S.N),fRms=new Float32Array(S.N);
+  for(let k=0;k<S.N;k++){
+    const a=Math.min(L,Math.round(k*h.spf*ratio)),b=Math.min(L,Math.round((k+1)*h.spf*ratio));let pk=0,ss=0;
+    for(const x of ch)for(let i=a;i<b;i++){const v=x[i];ss+=v*v;const av=v<0?-v:v;if(av>pk)pk=av}
+    fPeak[k]=pk;fRms[k]=b>a?10*Math.log10(ss/((b-a)*nc)+1e-12):-120;
+  }
+  const B=4000,mn=new Float32Array(B),mx=new Float32Array(B);
+  for(let j=0;j<B;j++){const a=Math.floor(j*L/B),b=Math.floor((j+1)*L/B);let lo=0,hi=0;for(const x of ch)for(let i=a;i<b;i++){const v=x[i];if(v<lo)lo=v;if(v>hi)hi=v}mn[j]=lo;mx[j]=hi}
+  const {E,hop}=hopEnergies(ch,fs);
+  return {fPeak,fRms,mn,mx,B,E,hop,dur:buf.duration};
+}
+
+/* ---------- gain model ---------- */
+function ampSteps(t){return Math.max(-40,Math.round(20*Math.log10(Math.max(t,1e-4))/1.5))}
+function fadeSteps(k){
+  if(k<S.sel0||k>=S.sel1)return 0;let d=0;
+  const Fi=Math.round(S.fadeIn/S.fd),Fo=Math.round(S.fadeOut/S.fd),a=k-S.sel0,b=S.sel1-1-k;
+  if(Fi>0&&a<Fi)d=Math.min(d,ampSteps((a+0.5)/Fi));
+  if(Fo>0&&b<Fo)d=Math.min(d,ampSteps((b+0.5)/Fo));
+  return d;
+}
+const gainSteps=k=>S.steps+fadeSteps(k);
+function selStats(){
+  const an=S.an;if(!an)return null;
+  let pk=0;for(let k=S.sel0;k<S.sel1;k++)if(an.fPeak[k]>pk)pk=an.fPeak[k];
+  return {lufs:gatedLoudness(an.E,an.hop,S.sel0*S.fd,S.sel1*S.fd),peak:pk>0?20*Math.log10(pk):-120};
+}
+
+/* ---------- UI refresh ---------- */
+function refresh(){
+  $('#tStart').textContent=fmt(S.sel0*S.fd);$('#tEnd').textContent=fmt(S.sel1*S.fd);
+  $('#tLen').textContent='Length '+fmt((S.sel1-S.sel0)*S.fd);
+  $('#clockLen').textContent=fmt(S.N*S.fd);$('#clockNow').textContent=fmt(S.ph);
+  const db=S.steps*1.5;$('#gainVal').textContent=sdb(db);
+  $('#gainSteps').textContent=(S.steps>0?'+':'')+S.steps+(Math.abs(S.steps)===1?' step':' steps');
+  $('#fadeInV').textContent=S.fadeIn?S.fadeIn.toFixed(1)+' s':'off';$('#fadeOutV').textContent=S.fadeOut?S.fadeOut.toFixed(1)+' s':'off';
+  const st=selStats(),pill=$('#clipPill');
+  if(st){
+    $('#sLufs').innerHTML=st.lufs==null?'too quiet to measure':`${sdb(st.lufs)} <i>→</i> ${sdb(st.lufs+db)} <i>LUFS</i>`;
+    const after=st.peak+db;$('#sPeak').innerHTML=`${sdb(st.peak)} <i>→</i> ${sdb(after)} <i>dBFS</i>`;
+    pill.className='pill '+(after>0.05?'bad':after>-0.5?'mid':'ok');pill.textContent=after>0.05?'Clips':after>-0.5?'Tight':'Clean';
+  }else{$('#sLufs').textContent=S.P?'measuring…':'—';$('#sPeak').textContent='—';pill.className='pill ok';pill.textContent='—'}
+  draw();
+}
+
+/* ---------- waveform ---------- */
+const cv=$('#wave'),cx=cv.getContext('2d');const RULER=22;
+function tok(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function draw(){
+  const dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+  cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,W,H);
+  if(!S.P)return;
+  const c={panel:tok('--panel'),wave:tok('--wave'),dim:tok('--wave-dim'),acc:tok('--accent'),clip:tok('--clip'),ink:tok('--ink'),muted:tok('--muted'),line:tok('--line'),sel:tok('--sel')};
+  const D=S.N*S.fd,wh=H-RULER,mid=wh/2,amp=mid*0.92,xA=S.sel0/S.N*W,xB=S.sel1/S.N*W;
+  cx.fillStyle=c.sel;cx.fillRect(xA,0,xB-xA,wh);
+  cx.fillStyle=c.line;cx.fillRect(0,mid,W,1);
+  const an=S.an;
+  if(an){
+    for(let x=0;x<W;x++){
+      const t0=x/W*D,t1=(x+1)/W*D;
+      const j0=Math.floor(t0/an.dur*an.B),j1=Math.max(j0+1,Math.floor(t1/an.dur*an.B));
+      let lo=0,hi=0;for(let j=Math.max(0,j0);j<Math.min(an.B,j1);j++){if(an.mn[j]<lo)lo=an.mn[j];if(an.mx[j]>hi)hi=an.mx[j]}
+      const k=Math.min(S.N-1,Math.floor((t0+t1)/2/S.fd)),inSel=k>=S.sel0&&k<S.sel1;
+      const g=inSel?Math.pow(10,gainSteps(k)*1.5/20):1;
+      const a=hi*g,b=lo*g;
+      cx.fillStyle=inSel?c.wave:c.dim;
+      const yT=mid-Math.min(1,a)*amp,yB=mid-Math.max(-1,b)*amp;cx.fillRect(x,yT,1,Math.max(1,yB-yT));
+      if(inSel&&(a>1||b<-1)){cx.fillStyle=c.clip;if(a>1)cx.fillRect(x,mid-amp-3,1,6);if(b<-1)cx.fillRect(x,mid+amp-3,1,6)}
+    }
+  }else{cx.fillStyle=c.muted;cx.font='13px '+tok('--f-body');cx.fillText('Decoding waveform…',16,mid-8)}
+  cx.strokeStyle=c.line;cx.setLineDash([3,4]);
+  for(const y of [mid-amp,mid+amp]){cx.beginPath();cx.moveTo(0,y+.5);cx.lineTo(W,y+.5);cx.stroke()}
+  cx.setLineDash([]);
+  // ruler
+  cx.fillStyle=c.panel;cx.fillRect(0,wh,W,RULER);cx.fillStyle=c.line;cx.fillRect(0,wh,W,1);
+  const steps=[1,2,5,10,15,30,60,120,300];let step=steps.find(s=>W/(D/s)>=70)||600;
+  cx.fillStyle=c.muted;cx.font='11px '+tok('--f-mono');
+  for(let t=0;t<=D;t+=step){const x=Math.round(t/D*W);cx.fillRect(x,wh,1,5);const m=Math.floor(t/60),s=Math.round(t%60);if(x<W-30)cx.fillText(m+':'+String(s).padStart(2,'0'),x+3,wh+15)}
+  // handles
+  for(const x of [xA,xB]){
+    cx.fillStyle=c.acc;cx.fillRect(Math.round(x)-1,0,2,wh);
+    const tx=Math.min(W-14,Math.max(0,x-7));cx.beginPath();cx.roundRect(tx,0,14,20,[0,0,4,4]);cx.fill();
+    cx.fillStyle=c.panel;cx.fillRect(tx+5,5,1,10);cx.fillRect(tx+8,5,1,10);
+  }
+  const xp=S.ph/D*W;cx.fillStyle=c.ink;cx.fillRect(Math.round(xp),0,1,wh);
+}
+new ResizeObserver(()=>draw()).observe(cv);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+let drag=null;
+function hit(x){const W=cv.clientWidth,xA=S.sel0/S.N*W,xB=S.sel1/S.N*W;if(Math.abs(x-xA)<10&&Math.abs(x-xA)<=Math.abs(x-xB))return 'a';if(Math.abs(x-xB)<10)return 'b';return null}
+cv.addEventListener('pointerdown',e=>{
+  if(!S.P)return;const x=e.offsetX;drag=hit(x);cv.setPointerCapture(e.pointerId);
+  if(!drag){S.ph=Math.max(0,Math.min(S.N*S.fd,x/cv.clientWidth*S.N*S.fd));if(S.playing)play(S.ph,S.sel1*S.fd);refresh()}
+});
+cv.addEventListener('pointermove',e=>{
+  if(!S.P)return;const x=e.offsetX;
+  if(!drag){cv.style.cursor=hit(x)?'ew-resize':'crosshair';return}
+  const f=Math.round(Math.max(0,Math.min(1,x/cv.clientWidth))*S.N);
+  if(drag==='a')S.sel0=Math.max(0,Math.min(f,S.sel1-1));else S.sel1=Math.min(S.N,Math.max(f,S.sel0+1));
+  refresh();
+});
+cv.addEventListener('pointerup',()=>{if(drag&&S.playing)play(S.sel0*S.fd,S.sel1*S.fd);drag=null});
+
+document.querySelectorAll('[data-nudge]').forEach(b=>b.addEventListener('click',()=>{
+  const [w,d]=b.dataset.nudge.split(',');const n=+d;
+  if(w==='a')S.sel0=Math.max(0,Math.min(S.sel1-1,S.sel0+n));else S.sel1=Math.min(S.N,Math.max(S.sel0+1,S.sel1+n));
+  refresh();
+}));
+$('#resetTrim').addEventListener('click',()=>{S.sel0=0;S.sel1=S.N;refresh()});
+$('#autoTrim').addEventListener('click',()=>{
+  if(!S.an){status('Wait for the waveform to finish loading.');return}
+  const r=S.an.fRms,th=-50;let a=0,b=S.N-1;while(a<S.N&&r[a]<th)a++;while(b>a&&r[b]<th)b--;
+  if(a>=S.N){status('The whole track is below −50 dBFS, so there is nothing to trim against.',true);return}
+  S.sel0=a;S.sel1=b+1;refresh();
+  status(`Trimmed ${fmt(a*S.fd)} of silence from the start and ${fmt((S.N-1-b)*S.fd)} from the end.`);
+});
+$('#fadeIn').addEventListener('input',e=>{S.fadeIn=+e.target.value;refresh();restartIfPlaying()});
+$('#fadeOut').addEventListener('input',e=>{S.fadeOut=+e.target.value;refresh();restartIfPlaying()});
+function setSteps(n){S.steps=Math.max(-16,Math.min(16,n));$('#gain').value=S.steps;refresh();restartIfPlaying()}
+$('#gain').addEventListener('input',e=>setSteps(+e.target.value));
+$('#gMinus').addEventListener('click',()=>setSteps(S.steps-1));
+$('#gPlus').addEventListener('click',()=>setSteps(S.steps+1));
+document.querySelectorAll('[data-target]').forEach(b=>b.addEventListener('click',()=>{
+  const st=selStats();if(!st||st.lufs==null){status('Loudness is still being measured.');return}
+  const t=+b.dataset.target,n=Math.round((t-st.lufs)/1.5);setSteps(n);
+  const after=st.peak+S.steps*1.5;
+  status(`Set to ${sdb(st.lufs+S.steps*1.5)} LUFS for a ${t} target.`+(after>0.05?` Peaks now reach ${sdb(after)} dBFS and will clip. Try "Loudest without clipping".`:''),after>0.05);
+}));
+$('#maxClean').addEventListener('click',()=>{
+  const st=selStats();if(!st){status('Loudness is still being measured.');return}
+  setSteps(Math.floor(-st.peak/1.5));status(`Gain set to ${sdb(S.steps*1.5)} dB. The loudest peak lands at ${sdb(st.peak+S.steps*1.5)} dBFS.`);
+});
+
+/* ---------- playback ---------- */
+function curPos(){return S.playing?Math.min(S.playing.to,S.playing.from+Math.max(0,S.ctx.currentTime-S.playing.t0)):S.ph}
+function stop(){if(S.playing){const p=S.playing;S.playing=null;try{p.src.stop()}catch(e){}}$('#play').textContent='Play'}
+function play(from,to){
+  stop();if(!S.buf||!S.ctx)return;S.ctx.resume();
+  from=Math.max(0,from);to=Math.min(to,S.buf.duration);if(to-from<0.05)return;
+  const src=S.ctx.createBufferSource();src.buffer=S.buf;const g=S.ctx.createGain();src.connect(g).connect(S.ctx.destination);
+  const k0=Math.floor(from/S.fd),k1=Math.max(k0+2,Math.ceil(to/S.fd)),curve=new Float32Array(k1-k0);
+  for(let i=0;i<curve.length;i++)curve[i]=Math.pow(10,gainSteps(k0+i)*1.5/20);
+  const t0=S.ctx.currentTime+0.04;g.gain.setValueAtTime(curve[0],S.ctx.currentTime);g.gain.setValueCurveAtTime(curve,t0,(k1-k0)*S.fd);
+  src.start(t0,from,to-from);S.playing={src,t0,from,to};$('#play').textContent='Pause';
+  src.onended=()=>{if(S.playing&&S.playing.src===src){S.playing=null;$('#play').textContent='Play';S.ph=Math.min(to,S.sel1*S.fd);refresh()}};
+  const tick=()=>{if(!S.playing||S.playing.src!==src)return;S.ph=curPos();$('#clockNow').textContent=fmt(S.ph);draw();requestAnimationFrame(tick)};requestAnimationFrame(tick);
+}
+let rT=0;function restartIfPlaying(){if(!S.playing)return;clearTimeout(rT);rT=setTimeout(()=>{if(S.playing)play(curPos(),S.playing.to)},120)}
+function togglePlay(){
+  if(!S.buf)return;
+  if(S.playing){S.ph=curPos();stop();refresh();return}
+  const a=S.sel0*S.fd,b=S.sel1*S.fd;play(S.ph>=a&&S.ph<b-0.05?S.ph:a,b);
+}
+$('#play').addEventListener('click',togglePlay);
+$('#hearStart').addEventListener('click',()=>play(S.sel0*S.fd,Math.min(S.sel1*S.fd,S.sel0*S.fd+5)));
+$('#hearEnd').addEventListener('click',()=>play(Math.max(S.sel0*S.fd,S.sel1*S.fd-5),S.sel1*S.fd));
+document.addEventListener('keydown',e=>{
+  if(e.code!=='Space'||!S.buf)return;const t=e.target;
+  if(t.tagName==='BUTTON'||(t.tagName==='INPUT'&&t.type==='text')||t.tagName==='LABEL')return;
+  e.preventDefault();togglePlay();
+});
+
+/* ---------- save ---------- */
+const CRCT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRCT[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+function makeZip(name,data){
+  const nb=new TextEncoder().encode(name),crc=crc32(data),n=data.length,d=new Date();
+  const tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
+  const lh=new DataView(new ArrayBuffer(30));[[0,0x04034b50,4],[4,20],[6,0x0800],[8,0],[10,tm],[12,dt],[14,crc,4],[18,n,4],[22,n,4],[26,nb.length],[28,0]].forEach(([o,v,s])=>s===4?lh.setUint32(o,v,true):lh.setUint16(o,v,true));
+  const cd=new DataView(new ArrayBuffer(46));[[0,0x02014b50,4],[4,20],[6,20],[8,0x0800],[10,0],[12,tm],[14,dt],[16,crc,4],[20,n,4],[24,n,4],[28,nb.length],[42,0,4]].forEach(([o,v,s])=>s===4?cd.setUint32(o,v,true):cd.setUint16(o,v,true));
+  const eo=new DataView(new ArrayBuffer(22));eo.setUint32(0,0x06054b50,true);eo.setUint16(8,1,true);eo.setUint16(10,1,true);eo.setUint32(12,46+nb.length,true);eo.setUint32(16,30+nb.length+n,true);
+  return new Blob([lh,nb,data,cd,nb,eo]);
+}
+async function getDownloads(){try{if(window.claude&&typeof window.claude.use==='function')return await window.claude.use('downloads')}catch(e){}return null}
+const MB=n=>(n/1048576).toFixed(1)+' MB';
+$('#save').addEventListener('click',async()=>{
+  if(!S.P)return;
+  let name=($('#fname').value||'').trim()||'edit.mp3';if(!/\.mp3$/i.test(name))name+='.mp3';
+  const r=buildMp3(S.P,S.sel0,S.sel1,gainSteps),out=r.bytes;
+  const warn=r.clampHi?` ${r.clampHi} gain values hit the format's ceiling, so those frames are slightly quieter than asked.`:'';
+  const dl=await getDownloads();
+  if(dl){
+    try{await dl.save({filename:name.replace(/\.mp3$/i,'.zip'),data:makeZip(name,out)});status(`Saved ${name} (${MB(out.length)}) inside a .zip. Open the standalone Gainsaw file to save a plain .mp3.`+warn)}
+    catch(e){const c=e&&e.code;status(c==='declined'?'Save cancelled.':c==='rate_limited'?'A save prompt is already open.':'Saving is not available in this view. Open the standalone Gainsaw file instead.',c!=='declined')}
+    return;
+  }
+  if(window.top!==window.self){status('Saving is not available in this view. Open the standalone Gainsaw file instead.',true);return}
+  const url=URL.createObjectURL(new Blob([out],{type:'audio/mpeg'}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+  status(`Saved ${name} · ${fmt((S.sel1-S.sel0)*S.fd)} · ${MB(out.length)} · no re-encoding.`+warn);
+});
+</script>

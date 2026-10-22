@@ -1,0 +1,7 @@
+.env
+.env.*
+*.sqlite
+*.db
+/dist
+.DS_Store
+/marketing/raw
