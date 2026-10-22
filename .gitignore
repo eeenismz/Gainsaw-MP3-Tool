@@ -5,3 +5,6 @@
 /dist
 .DS_Store
 /marketing/raw
+
+# generated test fixtures (tests/make-fixtures.sh)
+/tests/fixtures/
