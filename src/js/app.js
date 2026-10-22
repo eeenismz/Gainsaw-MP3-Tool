@@ -33,7 +33,7 @@ async function load(file){
     document.createTextNode(`MPEG-${h.m1?'1':h.ver===2?'2':'2.5'} Layer III · ${(h.sr/1000).toFixed(1)} kHz · ${MODES[h.mode]} · ${vbr?'VBR ~':''}${kbps} kbps · ${fmt(dur)}`));
   $('#frameNote').textContent=`cuts snap to ${(S.fd*1000).toFixed(1)} ms frames`;
   $('#fname').value=file.name.replace(/\.mp3$/i,'')+'-edit.mp3';
-  drop.hidden=true;$('#openAgain').hidden=false;
+  drop.hidden=true;$('#openAgain').hidden=false;$('#hA').hidden=$('#hB').hidden=false;
   ['#trimCard','#gainCard'].forEach(s=>$(s).classList.remove('off'));
   ['#play','#hearStart','#hearEnd','#save','#fname'].forEach(s=>$(s).disabled=false);
   refresh();

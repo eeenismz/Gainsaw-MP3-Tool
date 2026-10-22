@@ -1,5 +1,5 @@
 /* ---------- waveform ---------- */
-let cv,cx;
+let cv,cx,hA,hB;
 const RULER=22;
 function tok(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
 function draw(){
@@ -39,13 +39,32 @@ function draw(){
     const tx=Math.min(W-14,Math.max(0,x-7));cx.beginPath();cx.roundRect(tx,0,14,20,[0,0,4,4]);cx.fill();
     cx.fillStyle=c.panel;cx.fillRect(tx+5,5,1,10);cx.fillRect(tx+8,5,1,10);
   }
+  // keyboard handles: same spot as the drawn handles, clamped the same way; aria values in frames
+  hA.style.left=Math.max(0,Math.min(W-14,xA-7))+'px';hB.style.left=Math.max(0,Math.min(W-14,xB-7))+'px';
+  hA.setAttribute('aria-valuemin',0);hA.setAttribute('aria-valuemax',S.sel1-1);hA.setAttribute('aria-valuenow',S.sel0);hA.setAttribute('aria-valuetext',fmt(S.sel0*S.fd));
+  hB.setAttribute('aria-valuemin',S.sel0+1);hB.setAttribute('aria-valuemax',S.N);hB.setAttribute('aria-valuenow',S.sel1);hB.setAttribute('aria-valuetext',fmt(S.sel1*S.fd));
   const xp=S.ph/D*W;cx.fillStyle=c.ink;cx.fillRect(Math.round(xp),0,1,wh);
 }
 let drag=null;
 function hit(x){const W=cv.clientWidth,xA=S.sel0/S.N*W,xB=S.sel1/S.N*W;if(Math.abs(x-xA)<10&&Math.abs(x-xA)<=Math.abs(x-xB))return 'a';if(Math.abs(x-xB)<10)return 'b';return null}
 
+/* keyboard trim on a focused handle (w='a' start, 'b' end): arrows = 1 frame, Shift = 1 s, Home/End = ends */
+function kbTrim(e,w){
+  if(!S.P||e.altKey||e.ctrlKey||e.metaKey)return;
+  const k=e.key,d=(k==='ArrowLeft'?-1:k==='ArrowRight'?1:0)*(e.shiftKey?Math.round(1/S.fd):1);
+  if(!d&&k!=='Home'&&k!=='End')return;
+  e.preventDefault(); // stops the page scrolling on arrows
+  let f=w==='a'?S.sel0:S.sel1;
+  if(k==='Home')f=0;else if(k==='End')f=S.N;else f+=d;
+  // same clamps as the nudge buttons
+  if(w==='a')S.sel0=Math.max(0,Math.min(S.sel1-1,f));else S.sel1=Math.min(S.N,Math.max(S.sel0+1,f));
+  refresh();
+  if(S.playing)play(S.sel0*S.fd,S.sel1*S.fd); // same restart as pointerup
+}
+
 function initWaveform(){
-cv=$('#wave');cx=cv.getContext('2d');
+cv=$('#wave');cx=cv.getContext('2d');hA=$('#hA');hB=$('#hB');
+hA.addEventListener('keydown',e=>kbTrim(e,'a'));hB.addEventListener('keydown',e=>kbTrim(e,'b'));
 new ResizeObserver(()=>draw()).observe(cv);
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
 new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});

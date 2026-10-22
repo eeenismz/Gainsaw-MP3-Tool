@@ -31,9 +31,12 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-be
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.small{padding:6px 9px;font-size:13px;font-family:var(--f-mono);font-weight:400}
 .btn:focus-visible,.chip:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.handle:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .deck{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .wavewrap{position:relative;height:240px}
 canvas#wave{display:block;width:100%;height:100%;touch-action:none}
+/* keyboard trim handles: transparent, sit over the canvas handles, ignore the mouse */
+.handle{position:absolute;top:0;bottom:22px;width:14px;background:transparent;pointer-events:none}
 .drop{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:10px;text-align:center;padding:20px;background:var(--panel)}
 .drop.over{background:var(--panel-2);outline:2px dashed var(--accent);outline-offset:-10px}
 .drop h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0}

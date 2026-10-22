@@ -22,6 +22,9 @@
   <section class="deck" aria-label="Waveform">
     <div class="wavewrap" id="wavewrap">
       <canvas id="wave" aria-label="Waveform. Drag the blue handles to trim the start and end."></canvas>
+      <!-- invisible keyboard handles over the canvas trim handles; positioned in draw() -->
+      <div class="handle" id="hA" role="slider" tabindex="0" aria-label="Trim start" hidden></div>
+      <div class="handle" id="hB" role="slider" tabindex="0" aria-label="Trim end" hidden></div>
       <div class="drop" id="drop">
         <svg class="ghost" viewBox="0 0 560 46" aria-hidden="true"><g fill="var(--wave-dim)" id="ghostbars"></g></svg>
         <h2>Drop an MP3 here</h2>
