@@ -26,7 +26,7 @@ Open `dist/gainsaw.html` (one self-contained file) or `src/index.html` in Chrome
 - **Fades use the same mechanism.** Each frame's gain is stepped down (or up) across the fade, so the fade is also lossless. The steps are 1.5 dB, which is smooth enough over half a second or more.
 - **The headers are rebuilt on trim.** The Xing/LAME header (VBR seek table and length) is rebuilt for the new length. If the front or end was cut, the LAME encoder delay and end padding are reset to zero so players don't drop real audio, and the header CRC is recomputed. ID3 tags (title, artist, cover art) are copied through. If nothing was trimmed, the Xing frame is left as it was, so an unedited save is byte-identical to the input.
 - **Known quirk:** a front cut can cause a glitch of about 26 ms. The first kept frame can refer to bit-reservoir data that lived in a removed frame. A fade-in hides it.
-- **Limits:** VBRI headers are dropped on save (playback is unaffected). Gain values that would exceed the format's ceiling are clamped, and Gainsaw shows a warning when that happens.
+- **Limits:** VBRI headers are dropped on save (playback is unaffected). Gain values that would exceed the format's ceiling are clamped, and Gainsaw shows a warning when that happens. The LAME tag's "music length" and "music CRC" keep their original values after an edit. Players ignore them, but strict validators may flag them.
 
 ## Development
 

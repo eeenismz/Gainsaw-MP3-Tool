@@ -16,6 +16,8 @@
   --accent:#7590FF; --accent-ink:#0A0E15; --wave:#C9D3E4; --wave-dim:#384152; --sel:rgba(117,144,255,.08);
   --clip:#FF5C70; --ok:#3CC98B; --warn:#E5AA4C; color-scheme:dark}
 *{box-sizing:border-box}
+/* make the hidden attribute win over display rules like .drop{display:grid} */
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
 .app{max-width:1080px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
 header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}

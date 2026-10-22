@@ -19,4 +19,6 @@
 - 2026-10-22 Recent ffprobe/ffmpeg honour the LAME tag's delay/padding when reporting duration, so a stale tag shows up as a short file in tests.
 - 2026-10-22 ffmpeg `anoisesrc` defaults to 48 kHz; the pink fixture is 48 kHz and uses `seed=1` for reproducibility.
 - 2026-10-22 The LAME tag's music length (q+28) and music CRC (q+32) are not updated on save; only delay/padding and the tag CRC are. Playback is fine, strict validators may complain.
+- 2026-10-22 A class with `display:` overrides the `hidden` attribute, so the drop panel stayed over the waveform after load and the handles couldn't be reached. v1 had the same bug; the Claude viewer's wrapper masked it. Fixed with a global `[hidden]{display:none!important}`. "No JS errors" checks don't catch this; check computed styles.
+- 2026-10-22 In headless Chrome with `--virtual-time-budget`, `decodeAudioData` never resolves, so awaiting `load()` hangs and the page dump shows nothing. To check the UI state after a load, read the DOM on a timer instead of awaiting the full load.
 - 2026-10-22 The Claude-in-Chrome extension cannot open file:// pages; use headless Chrome (`--headless=new --dump-dom`, `--allow-file-access-from-files`) for file:// checks.

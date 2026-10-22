@@ -10,6 +10,7 @@ Linear: Gainsaw-MP3-Tool (https://linear.app/estains/project/gainsaw-mp3-tool-4e
 - Keyboard support for trim handles: arrows = 1 frame, Shift+arrows = 1 s, Home/End (2026-10-22: headless keyboard test passes)
 - Single-file dist: `node build.js` inlines everything into `dist/gainsaw.html` (2026-10-22: loads from file:// with no JS errors)
 - README with usage, how it stays lossless, development and deploy (2026-10-22)
+- Fix drop panel covering the waveform after load: `[hidden]` lost to `.drop{display:grid}` (2026-10-22: headless check shows drop hidden and canvas on top; 54/54 tests pass)
 
 ## In Progress
 
