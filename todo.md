@@ -7,10 +7,11 @@ Linear: Gainsaw-MP3-Tool (https://linear.app/estains/project/gainsaw-mp3-tool-4e
 - Fix trimmed duration: zero LAME delay/padding on the trimmed side (2026-10-22: AC3 passes for VBR/Xing files)
 - Fix K-weighting coefficients in `loudness.js` (2026-10-22: 1 kHz sine reads -20.0 LUFS)
 - Add CRC, APE, MPEG-2.5 and 60-min test fixtures (2026-10-22: 54/54 pass, no bugs exposed)
+- Keyboard support for trim handles: arrows = 1 frame, Shift+arrows = 1 s, Home/End (2026-10-22: headless keyboard test passes)
+- Single-file dist: `node build.js` inlines everything into `dist/gainsaw.html` (2026-10-22: loads from file:// with no JS errors)
+- README with usage, how it stays lossless, development and deploy (2026-10-22)
 
 ## In Progress
 
 ## Pending
-- Keyboard support for trim handles (focusable, arrow = 1 frame, Shift+arrow = 1 s)
-- Decide on single-file dist (SPEC §3.1) and set up `dist/`
-- README with usage and the "how it stays lossless" explanation
+- Decide whether to drop the Claude-viewer .zip save path (`src/js/zip.js`); proposed drop, waiting on owner
