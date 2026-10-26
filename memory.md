@@ -11,6 +11,7 @@
 - 2026-10-22 On trim, `buildMp3` zeroes the LAME tag's encoder delay if the front was cut and end padding if the end was cut (then recomputes the tag CRC). Leaving them stale made ffprobe/players drop 24–72 ms of real audio, more than SPEC §4.7 estimated.
 - 2026-10-22 K-weighting uses the libebur128 bilinear (tan) form, not the RBJ cookbook shelf; RBJ with the same G/Q/fc read ~0.26 LU low.
 
+- 2026-10-22 The favicon is an inline SVG `data:` URI in `src/index.html`, not a separate file, so `dist/` stays one file for FTP and the icon works from `file://`. No PNG/apple-touch-icon, because Chrome is the target and a PNG would need base64 inlining.
 ## Rejected Approaches
 - 2026-10-22 Widening the AC3 duration tolerance to hide the trim shortfall: the shortfall was exactly the stale LAME delay+padding, so it was fixed in code instead.
 
