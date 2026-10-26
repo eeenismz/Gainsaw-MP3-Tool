@@ -117,6 +117,7 @@ function setSteps(n){
   // loud tracks already peak near 0 dBFS, so a boost only clips; say so instead of looking like nothing happened
   const st=selStats();
   if(st&&S.steps>0&&st.peak+S.steps*1.5>0.05)status(`Peaks now reach ${sdb(st.peak+S.steps*1.5)} dBFS and will clip: this track already peaks at ${sdb(st.peak)} dBFS. Try "Loudest without clipping".`,true);
+  else if($('#status').textContent.startsWith('Peaks now reach'))status(''); // clear our own stale warning once it no longer clips
 }
 $('#gain').addEventListener('input',e=>setSteps(+e.target.value));
 // after a mouse drag, release focus from the sliders so ←/→ go back to moving the playhead (Tab still focuses them for keyboard use)

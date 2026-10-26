@@ -27,8 +27,11 @@ document.addEventListener('keydown',e=>{
   if(!S.P||(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')||e.altKey||e.ctrlKey||e.metaKey)return;
   const t=e.target;if(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.classList.contains('handle'))return;
   e.preventDefault();
+  if(e.repeat&&S.playing)return; // a held key would restart playback ~30 times a second
   const d=(e.key==='ArrowLeft'?-1:1)*(e.shiftKey?5:1);
-  S.ph=Math.max(0,Math.min(S.N*S.fd,curPos()+d));
+  // while playing, stay inside the kept part so playback doesn't silently stop past the end
+  const lo=S.playing?S.sel0*S.fd:0,hi=S.playing?S.sel1*S.fd-0.1:S.N*S.fd;
+  S.ph=Math.max(lo,Math.min(hi,curPos()+d));
   if(S.playing)play(S.ph,S.sel1*S.fd); // same as clicking the waveform while playing
   refresh();
 });
