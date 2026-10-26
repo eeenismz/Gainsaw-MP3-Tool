@@ -22,6 +22,16 @@ function initPlayer(){
 $('#play').addEventListener('click',togglePlay);
 $('#hearStart').addEventListener('click',()=>play(S.sel0*S.fd,Math.min(S.sel1*S.fd,S.sel0*S.fd+5)));
 $('#hearEnd').addEventListener('click',()=>play(Math.max(S.sel0*S.fd,S.sel1*S.fd-5),S.sel1*S.fd));
+/* ←/→ move the playhead 1 s (Shift = 5 s). Skipped on inputs and trim handles, which use the arrows themselves. */
+document.addEventListener('keydown',e=>{
+  if(!S.P||(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')||e.altKey||e.ctrlKey||e.metaKey)return;
+  const t=e.target;if(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.classList.contains('handle'))return;
+  e.preventDefault();
+  const d=(e.key==='ArrowLeft'?-1:1)*(e.shiftKey?5:1);
+  S.ph=Math.max(0,Math.min(S.N*S.fd,curPos()+d));
+  if(S.playing)play(S.ph,S.sel1*S.fd); // same as clicking the waveform while playing
+  refresh();
+});
 document.addEventListener('keydown',e=>{
   if(e.code!=='Space'||!S.buf)return;const t=e.target;
   if(t.tagName==='BUTTON'||(t.tagName==='INPUT'&&t.type==='text')||t.tagName==='LABEL')return;

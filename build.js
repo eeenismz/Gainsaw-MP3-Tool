@@ -1,9 +1,9 @@
-// build.js: inlines src/styles.css and src/js/*.js into one file, dist/gainsaw.html.
+// build.js: inlines src/styles.css and src/js/*.js into one file, dist/index.html.
 // Node only, no dependencies. Run: node build.js
 'use strict';
 const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, 'src'), DIST = path.join(__dirname, 'dist');
-const OUT = path.join(DIST, 'gainsaw.html');
+const OUT = path.join(DIST, 'index.html');
 
 let html = fs.readFileSync(path.join(SRC, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(SRC, 'styles.css'), 'utf8');

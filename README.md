@@ -4,11 +4,12 @@ Lossless MP3 trimming and volume changes, done in the browser. Your file never l
 
 ## Use
 
-Open `dist/gainsaw.html` (one self-contained file) or `src/index.html` in Chrome. Both work from `file://`, so there is nothing to install or run. Fonts load from Google Fonts; offline, the page falls back to system fonts.
+Open `dist/index.html` (one self-contained file) or `src/index.html` in Chrome. Both work from `file://`, so there is nothing to install or run. Fonts load from Google Fonts; offline, the page falls back to system fonts.
 
 - **Open MP3 / drop a file:** loads an MPEG Layer III (MP3) file. Other formats are not supported.
 - **Waveform:** drag the blue handles to trim the start and end. Click the waveform to move the playhead.
 - **Play / Pause:** plays the kept part, with the volume and fades applied. **Space** does the same, unless focus is on a button, label or text field.
+- **← / →:** move the playhead by 1 second (**Shift** for 5 seconds), unless focus is on a slider, a trim handle or the file name.
 - **Hear start / Hear end:** plays the first or last 5 seconds of the kept part.
 - **Trim card:** −1f / +1f nudge a cut by one MP3 frame (about 26 ms). **Trim silence** cuts quiet lead-in and tail (below −50 dBFS). **Reset trim** restores the full file. **Fade in / Fade out** set fades of up to 10 s.
 - **Keyboard on the trim handles:** Tab to a handle, then
@@ -53,9 +54,9 @@ node --test tests/
 Build the single-file version:
 
 ```
-node build.js                 # writes dist/gainsaw.html and clears the rest of dist/
+node build.js                 # writes dist/index.html and clears the rest of dist/
 ```
 
 ## Deploy
 
-Upload the contents of `dist/` to the web server by FTP (for example with FileZilla). `dist/` holds only `gainsaw.html`. Google Fonts load from the network, so the page needs internet access for the fonts only.
+Upload the contents of `dist/` to the web server by FTP (for example with FileZilla). `dist/` holds only `index.html`, so the folder URL opens the app. Google Fonts load from the network, so the page needs internet access for the fonts only.

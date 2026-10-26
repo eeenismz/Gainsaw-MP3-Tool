@@ -114,6 +114,8 @@ $('#fadeIn').addEventListener('input',e=>{S.fadeIn=+e.target.value;refresh();res
 $('#fadeOut').addEventListener('input',e=>{S.fadeOut=+e.target.value;refresh();restartIfPlaying()});
 function setSteps(n){S.steps=Math.max(-16,Math.min(16,n));$('#gain').value=S.steps;refresh();restartIfPlaying()}
 $('#gain').addEventListener('input',e=>setSteps(+e.target.value));
+// after a mouse drag, release focus from the sliders so ←/→ go back to moving the playhead (Tab still focuses them for keyboard use)
+window.addEventListener('pointerup',()=>{const a=document.activeElement;if(a&&a.type==='range')a.blur()});
 $('#gMinus').addEventListener('click',()=>setSteps(S.steps-1));
 $('#gPlus').addEventListener('click',()=>setSteps(S.steps+1));
 document.querySelectorAll('[data-target]').forEach(b=>b.addEventListener('click',()=>{
