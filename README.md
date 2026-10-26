@@ -9,7 +9,7 @@ Open `dist/index.html` (one self-contained file) or `src/index.html` in Chrome. 
 - **Open MP3 / drop a file:** loads an MPEG Layer III (MP3) file. Other formats are not supported.
 - **Waveform:** drag the blue handles to trim the start and end. Click the waveform to move the playhead.
 - **Play / Pause:** plays the kept part, with the volume and fades applied. **Space** does the same, unless focus is on a button, label or text field.
-- **← / →:** move the playhead by 1 second (**Shift** for 5 seconds), unless focus is on a slider, a trim handle or the file name.
+- **← / →:** move the playhead by 1 second (**Shift** for 5 seconds), unless focus is on a slider, a trim handle or the file name. A slider lets go of the keyboard after you drag it with the mouse; press Tab to reach it with the arrows again.
 - **Hear start / Hear end:** plays the first or last 5 seconds of the kept part.
 - **Trim card:** −1f / +1f nudge a cut by one MP3 frame (about 26 ms). **Trim silence** cuts quiet lead-in and tail (below −50 dBFS). **Reset trim** restores the full file. **Fade in / Fade out** set fades of up to 10 s.
 - **Keyboard on the trim handles:** Tab to a handle, then
@@ -17,8 +17,8 @@ Open `dist/index.html` (one self-contained file) or `src/index.html` in Chrome. 
   - **Shift + ← / →** move the cut by 1 second
   - **Home / End** move the start handle to 0 and the end handle to the last frame (limited so the cut never inverts)
   - **Space** still plays and pauses
-- **Volume card:** the gain is in 1.5 dB steps. **−** and **+** change it one step at a time. The loudness chips (−14, −16, −18 LUFS) set the step count that gets closest to the target. **Loudest without clipping** sets the largest gain whose peak stays under 0 dBFS. The preview plays with the same gain curve, and the saved file has it baked into the frames.
-- **Save MP3:** writes the trimmed, volume-adjusted file. The file name is editable.
+- **Volume card:** the gain is in 1.5 dB steps. **−** and **+** change it one step at a time. The loudness chips (−14, −16, −18 LUFS) set the step count that gets closest to the target. **Loudest without clipping** sets the largest gain whose peak stays under 0 dBFS. The preview plays with the same gain curve, and the saved file has it baked into the frames. If a boost pushes the peak past 0 dBFS, the status line turns red and warns that the file will clip. Loud songs often have little room to go up.
+- **Save MP3:** writes the trimmed, volume-adjusted file. Choose **Add "-edit"** (`song-edit.mp3`, the default) or **Same name** (`song.mp3`); the page remembers your choice. The file name stays editable. The browser saves a new copy to Downloads, so the original is never overwritten (Chrome adds " (1)" if the name is already there).
 
 ## How it stays lossless
 

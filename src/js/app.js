@@ -19,6 +19,15 @@ fileIn.addEventListener('change',()=>{if(fileIn.files[0])load(fileIn.files[0]);f
 ['dragleave','drop'].forEach(ev=>wrap.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
 wrap.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)load(f)});
 
+/* save name: "same" keeps the original file name, "edit" adds -edit. The choice is remembered in this browser. */
+const nameMode=()=>document.querySelector('input[name=namemode]:checked').value;
+function setFileName(){if(S.name)$('#fname').value=nameMode()==='same'?S.name:S.name.replace(/\.mp3$/i,'')+'-edit.mp3'}
+try{const m=localStorage.getItem('gainsaw.nameMode');if(m==='same'||m==='edit')document.querySelector(`input[name=namemode][value=${m}]`).checked=true}catch(e){}
+document.querySelectorAll('input[name=namemode]').forEach(r=>r.addEventListener('change',()=>{
+  try{localStorage.setItem('gainsaw.nameMode',nameMode())}catch(e){}
+  setFileName();
+}));
+
 async function load(file){
   stop();status('Reading '+file.name+'…');
   let P;
@@ -32,7 +41,7 @@ async function load(file){
   $('#fileinfo').innerHTML='';const b=document.createElement('b');b.textContent=file.name;$('#fileinfo').append(b,
     document.createTextNode(`MPEG-${h.m1?'1':h.ver===2?'2':'2.5'} Layer III · ${(h.sr/1000).toFixed(1)} kHz · ${MODES[h.mode]} · ${vbr?'VBR ~':''}${kbps} kbps · ${fmt(dur)}`));
   $('#frameNote').textContent=`cuts snap to ${(S.fd*1000).toFixed(1)} ms frames`;
-  $('#fname').value=file.name.replace(/\.mp3$/i,'')+'-edit.mp3';
+  setFileName();
   drop.hidden=true;$('#openAgain').hidden=false;$('#hA').hidden=$('#hB').hidden=false;
   ['#trimCard','#gainCard'].forEach(s=>$(s).classList.remove('off'));
   ['#play','#hearStart','#hearEnd','#save','#fname'].forEach(s=>$(s).disabled=false);

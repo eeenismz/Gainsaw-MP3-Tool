@@ -37,7 +37,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('keydown',e=>{
   if(e.code!=='Space'||!S.buf)return;const t=e.target;
-  if(t.tagName==='BUTTON'||(t.tagName==='INPUT'&&t.type==='text')||t.tagName==='LABEL')return;
+  if(t.tagName==='BUTTON'||(t.tagName==='INPUT'&&(t.type==='text'||t.type==='radio'))||t.tagName==='LABEL')return;
   e.preventDefault();togglePlay();
 });
 }
