@@ -14,6 +14,7 @@
 - 2026-10-22 The favicon is an inline SVG `data:` URI in `src/index.html`, not a separate file, so `dist/` stays one file for FTP and the icon works from `file://`. No PNG/apple-touch-icon, because Chrome is the target and a PNG would need base64 inlining.
 - 2026-10-26 Sliders give up focus after a mouse click, so ←/→ always move the playhead; keyboard users Tab to a slider to adjust it (accepted tech-reviewer trade-off).
 - 2026-10-26 `dist/` ships as `index.html`, so the folder URL opens the app.
+- 2026-10-26 Save name defaults to "-edit"; "Same name" is opt-in and remembered in the browser only. A web page can't overwrite the source file; Chrome's default download adds " (1)".
 ## Rejected Approaches
 - 2026-10-22 Widening the AC3 duration tolerance to hide the trim shortfall: the shortfall was exactly the stale LAME delay+padding, so it was fixed in code instead.
 
