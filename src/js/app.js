@@ -112,7 +112,12 @@ $('#autoTrim').addEventListener('click',()=>{
 });
 $('#fadeIn').addEventListener('input',e=>{S.fadeIn=+e.target.value;refresh();restartIfPlaying()});
 $('#fadeOut').addEventListener('input',e=>{S.fadeOut=+e.target.value;refresh();restartIfPlaying()});
-function setSteps(n){S.steps=Math.max(-16,Math.min(16,n));$('#gain').value=S.steps;refresh();restartIfPlaying()}
+function setSteps(n){
+  S.steps=Math.max(-16,Math.min(16,n));$('#gain').value=S.steps;refresh();restartIfPlaying();
+  // loud tracks already peak near 0 dBFS, so a boost only clips; say so instead of looking like nothing happened
+  const st=selStats();
+  if(st&&S.steps>0&&st.peak+S.steps*1.5>0.05)status(`Peaks now reach ${sdb(st.peak+S.steps*1.5)} dBFS and will clip: this track already peaks at ${sdb(st.peak)} dBFS. Try "Loudest without clipping".`,true);
+}
 $('#gain').addEventListener('input',e=>setSteps(+e.target.value));
 // after a mouse drag, release focus from the sliders so ←/→ go back to moving the playhead (Tab still focuses them for keyboard use)
 window.addEventListener('pointerup',()=>{const a=document.activeElement;if(a&&a.type==='range')a.blur()});

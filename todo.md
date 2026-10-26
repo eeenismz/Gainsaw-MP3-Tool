@@ -15,9 +15,9 @@ Linear: Gainsaw-MP3-Tool (https://linear.app/estains/project/gainsaw-mp3-tool-4e
 - ←/→ move the playhead 1 s (Shift = 5 s) when focus isn't on a slider, trim handle or text field (2026-10-26: checked in Chrome via MAMP, 54/54 tests pass)
 - Sliders release focus after a mouse drag, so arrows don't keep changing the volume after you click it (2026-10-26: checked in Chrome)
 - Build writes `dist/index.html` instead of `dist/gainsaw.html`, so the folder URL opens the app (2026-10-26)
+- Volume "no difference" report: gain works; loud tracks already peak near 0 dBFS so a boost only clips. Raising gain past 0 dBFS now shows a red status saying so (2026-10-26: tester-quality 4/4 pass on loud and quiet files, 54/54 tests)
 
 ## In Progress
-- Volume "no difference" report: gain works on quiet files (waveform grows, saved file louder per tests); waiting on owner for which file/what they checked
 
 ## Pending
 - LAME tag "music length" and "music CRC" are left at the original values after trim/gain (same as v1 and MP3Gain); update or zero them? (tech-reviewer warning)
