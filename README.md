@@ -18,7 +18,7 @@ Open `dist/index.html` (one self-contained file) or `src/index.html` in Chrome. 
   - **Home / End** move the start handle to 0 and the end handle to the last frame (limited so the cut never inverts)
   - **Space** still plays and pauses
 - **Volume card:** the gain is in 1.5 dB steps. **−** and **+** change it one step at a time. The loudness chips (−14, −16, −18 LUFS) set the step count that gets closest to the target. **Loudest without clipping** sets the largest gain whose peak stays under 0 dBFS. The preview plays with the same gain curve, and the saved file has it baked into the frames. If a boost pushes the peak past 0 dBFS, the status line turns red and warns that the file will clip. Loud songs often have little room to go up.
-- **Save MP3:** writes the trimmed, volume-adjusted file. Choose **Add "-edit"** (`song-edit.mp3`, the default) or **Same name** (`song.mp3`); the page remembers your choice. The file name stays editable. The browser saves a new copy to Downloads, so the original is never overwritten (Chrome adds " (1)" if the name is already there).
+- **Save MP3:** writes the trimmed, volume-adjusted file. Choose **Add "-edit"** (`song-edit.mp3`, the default) or **Same name** (`song.mp3`); the page remembers your choice. The file name stays editable. The browser saves a new copy to Downloads, so the original is never overwritten (Chrome adds " (1)" if the name is already there). If Chrome is set to ask where to save, pointing it at the original folder with "Same name" would replace the original.
 
 ## How it stays lossless
 
