@@ -12,6 +12,8 @@
 - 2026-10-22 K-weighting uses the libebur128 bilinear (tan) form, not the RBJ cookbook shelf; RBJ with the same G/Q/fc read ~0.26 LU low.
 
 - 2026-10-22 The favicon is an inline SVG `data:` URI in `src/index.html`, not a separate file, so `dist/` stays one file for FTP and the icon works from `file://`. No PNG/apple-touch-icon, because Chrome is the target and a PNG would need base64 inlining.
+- 2026-10-26 Sliders give up focus after a mouse click, so ←/→ always move the playhead; keyboard users Tab to a slider to adjust it (accepted tech-reviewer trade-off).
+- 2026-10-26 `dist/` ships as `index.html`, so the folder URL opens the app.
 ## Rejected Approaches
 - 2026-10-22 Widening the AC3 duration tolerance to hide the trim shortfall: the shortfall was exactly the stale LAME delay+padding, so it was fixed in code instead.
 
@@ -23,3 +25,4 @@
 - 2026-10-22 A class with `display:` overrides the `hidden` attribute, so the drop panel stayed over the waveform after load and the handles couldn't be reached. v1 had the same bug; the Claude viewer's wrapper masked it. Fixed with a global `[hidden]{display:none!important}`. "No JS errors" checks don't catch this; check computed styles.
 - 2026-10-22 In headless Chrome with `--virtual-time-budget`, `decodeAudioData` never resolves, so awaiting `load()` hangs and the page dump shows nothing. To check the UI state after a load, read the DOM on a timer instead of awaiting the full load.
 - 2026-10-22 The Claude-in-Chrome extension cannot open file:// pages; use headless Chrome (`--headless=new --dump-dom`, `--allow-file-access-from-files`) for file:// checks.
+- 2026-10-26 Raising the volume on an already-loud song barely changes the waveform and only clips, which looks like "nothing happened". The red clip message in `setSteps` now explains it.
